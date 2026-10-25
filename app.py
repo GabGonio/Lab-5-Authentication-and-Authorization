@@ -566,6 +566,9 @@ def node_delete(node_id):
     if not node:
         flash('Node not found.', 'error')
         return redirect(url_for('directory'))
+    if node['owner_id'] != current['user_id'] and current['role'] != 'sysop':
+        flash('Access denied.', 'error')
+        return redirect(url_for('directory'))
     if request.method == 'POST':
         node_repo.delete(node_id)
         flash('Node removed from registry.')
