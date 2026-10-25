@@ -617,6 +617,9 @@ def profile_by_id_edit(user_id):
     if not user:
         flash('User not found.', 'error')
         return redirect(url_for('index'))
+    if user_id != current['user_id']:
+            flash('Access denied.', 'error')
+            return redirect(url_for('index'))
     if request.method == 'POST':
         user_repo.update_region(user_id, request.form.get('region', ''))
         flash('Profile updated.')
