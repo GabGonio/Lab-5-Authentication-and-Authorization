@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Flask, render_template, request, redirect, url_for, make_response, flash
 import secrets
+import time
 
 app = Flask(__name__)
 app.secret_key = 'bbs-net-1987'
@@ -29,7 +30,12 @@ def create_session(user_id, username, role):
         role     -- the user's role string, either 'user' or 'sysop'
     """
     token = secrets.token_hex(32)
-    sessions[token] = {'user_id': user_id, 'username': username, 'role': role}
+    sessions[token] = {
+        'user_id': user_id,
+        'username': username,
+        'role': role,
+        'expires_at': time.time() + 1800
+    }
     return token
 
 
@@ -47,7 +53,16 @@ def get_current_user(req):
     token = req.cookies.get('bbs_token')
     if not token:
         return None
-    return sessions.get(token)
+
+    current = sessions.get(token)
+    if not current:
+        return None
+
+    if time.time() >= current['expires_at']:
+        del sessions[token]
+        return None
+
+    return current
 
 
 # -- Database initialisation -------------------------------------------------
